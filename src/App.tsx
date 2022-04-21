@@ -1,10 +1,10 @@
-import { useState, useMemo, useCallback, CSSProperties } from "react";
+import { useState, useMemo, useCallback, CSSProperties, memo } from "react";
 import "./App.css";
 
 type ExampleId =
-  | "Unmemoized"
-  | "Memoized Styles"
-  | "Memoized Styles and Callbacks";
+  | "Unmemoized props"
+  | "Memoized style props"
+  | "Memoized style and onPress props";
 
 let _onClickA: any = undefined;
 let _onClickB: any = undefined;
@@ -32,37 +32,50 @@ function logChanges(onClickA: any, onClickB: any, aStyle: any, bStyle: any) {
 }
 
 export function App() {
-  const [exampleId, setExampleId] = useState<ExampleId>("Unmemoized");
+  const [exampleId, setExampleId] = useState<ExampleId>("Unmemoized props");
+  const [memoizeComponents, setMemoizeComponents] = useState(false);
 
-  const switchExample = () => {
+  const switchExample = useCallback(() => {
     setExampleId(
-      exampleId === "Unmemoized"
-        ? "Memoized Styles"
-        : exampleId === "Memoized Styles"
-        ? "Memoized Styles and Callbacks"
-        : "Unmemoized"
+      exampleId === "Unmemoized props"
+        ? "Memoized style props"
+        : exampleId === "Memoized style props"
+        ? "Memoized style and onPress props"
+        : "Unmemoized props"
     );
-  };
+  }, [exampleId]);
+
+  const toggleMemoizedComponents = useCallback(() => {
+    setMemoizeComponents(!memoizeComponents);
+  }, [memoizeComponents]);
 
   return (
     <div className="App">
       <header className="App-header">
-        <p id={"header-title"}>{exampleId}</p>
-        <Button label={"Switch examples"} onClick={switchExample} />
+        <p id={"header-title"}>Demo</p>
+        <Button label={exampleId} onClick={switchExample} />
+        <Button
+          label={
+            memoizeComponents
+              ? "Memoized Circle and Button components"
+              : "Unmemoized Circle and Button components"
+          }
+          onClick={toggleMemoizedComponents}
+        />
       </header>
-      {exampleId === "Unmemoized" ? (
-        <DemoUnmemoized />
-      ) : exampleId === "Memoized Styles" ? (
-        <DemoMemoizedStyles />
+      {exampleId === "Unmemoized props" ? (
+        <DemoUnmemoized memoizeComponents={memoizeComponents} />
+      ) : exampleId === "Memoized style props" ? (
+        <DemoMemoizedStyles memoizeComponents={memoizeComponents} />
       ) : (
-        <DemoMemoizedStylesAndCallbacks />
+        <DemoMemoizedStylesAndCallbacks memoizeComponents={memoizeComponents} />
       )}
     </div>
   );
 }
 
-function DemoUnmemoized() {
-  const [a, setA] = useState(0);
+function DemoUnmemoized(_: { memoizeComponents: boolean }) {
+  const [a, setA] = useState(16);
   const [b, setB] = useState(0);
 
   const onClickA = () => {
@@ -79,28 +92,35 @@ function DemoUnmemoized() {
 
   logChanges(onClickA, onClickB, aStyle, bStyle);
 
+  const CircleComponent = _.memoizeComponents ? MemoizedCircle : Circle;
+  const ButtonComponent = _.memoizeComponents ? MemoizedButton : Button;
+
   return (
     <div className={"examplesRow"}>
       <div className="flexColumn">
-        <Circle name={"A"} style={aStyle} />
+        <CircleComponent name={"A"} style={aStyle} />
         <div className="valueText">A = {a}°</div>
-        <Button
+        <ButtonComponent
           name={"A"}
           label={"Increment hue A by 16°"}
           onClick={onClickA}
         />
       </div>
       <div className="flexColumn">
-        <Circle name={"B"} style={bStyle} />
+        <CircleComponent name={"B"} style={bStyle} />
         <div className="valueText">B = {b}°</div>
-        <Button name={"B"} label={"Increment hue B by A"} onClick={onClickB} />
+        <ButtonComponent
+          name={"B"}
+          label={"Increment hue B by A"}
+          onClick={onClickB}
+        />
       </div>
     </div>
   );
 }
 
-function DemoMemoizedStyles() {
-  const [a, setA] = useState(0);
+function DemoMemoizedStyles(_: { memoizeComponents: boolean }) {
+  const [a, setA] = useState(16);
   const [b, setB] = useState(0);
 
   const onClickA = () => {
@@ -121,28 +141,35 @@ function DemoMemoizedStyles() {
 
   logChanges(onClickA, onClickB, aStyle, bStyle);
 
+  const CircleComponent = _.memoizeComponents ? MemoizedCircle : Circle;
+  const ButtonComponent = _.memoizeComponents ? MemoizedButton : Button;
+
   return (
     <div className={"examplesRow"}>
       <div className="flexColumn">
-        <Circle name={"A"} style={aStyle} />
+        <CircleComponent name={"A"} style={aStyle} />
         <div className="valueText">A = {a}°</div>
-        <Button
+        <ButtonComponent
           name={"A"}
           label={"Increment hue A by 16°"}
           onClick={onClickA}
         />
       </div>
       <div className="flexColumn">
-        <Circle name={"A"} style={bStyle} />
+        <CircleComponent name={"A"} style={bStyle} />
         <div className="valueText">B = {b}°</div>
-        <Button name={"B"} label={"Increment hue B by A"} onClick={onClickB} />
+        <ButtonComponent
+          name={"B"}
+          label={"Increment hue B by A"}
+          onClick={onClickB}
+        />
       </div>
     </div>
   );
 }
 
-function DemoMemoizedStylesAndCallbacks() {
-  const [a, setA] = useState(0);
+function DemoMemoizedStylesAndCallbacks(_: { memoizeComponents: boolean }) {
+  const [a, setA] = useState(16);
   const [b, setB] = useState(0);
 
   const onClickA = useCallback(() => {
@@ -163,21 +190,28 @@ function DemoMemoizedStylesAndCallbacks() {
 
   logChanges(onClickA, onClickB, aStyle, bStyle);
 
+  const CircleComponent = _.memoizeComponents ? MemoizedCircle : Circle;
+  const ButtonComponent = _.memoizeComponents ? MemoizedButton : Button;
+
   return (
     <div className={"examplesRow"}>
       <div className="flexColumn">
-        <Circle name={"A"} style={aStyle} />
+        <CircleComponent name={"A"} style={aStyle} />
         <div className="valueText">A = {a}°</div>
-        <Button
+        <ButtonComponent
           name={"A"}
           label={"Increment hue A by 16°"}
           onClick={onClickA}
         />
       </div>
       <div className="flexColumn">
-        <Circle name={"A"} style={bStyle} />
+        <CircleComponent name={"A"} style={bStyle} />
         <div className="valueText">B = {b}°</div>
-        <Button name={"B"} label={"Increment hue B by A"} onClick={onClickB} />
+        <ButtonComponent
+          name={"B"}
+          label={"Increment hue B by A"}
+          onClick={onClickB}
+        />
       </div>
     </div>
   );
@@ -185,7 +219,11 @@ function DemoMemoizedStylesAndCallbacks() {
 
 function Button(_: { name?: string; label: string; onClick: () => void }) {
   return (
-    <div className={"button"} onClick={_.onClick}>
+    <div
+      id={_.name ? undefined : "headerButton"}
+      className={"button"}
+      onClick={_.onClick}
+    >
       {_.label}
     </div>
   );
@@ -194,5 +232,8 @@ function Button(_: { name?: string; label: string; onClick: () => void }) {
 function Circle(_: { name: string; style: CSSProperties }) {
   return <div className={"circle"} style={_.style}></div>;
 }
+
+const MemoizedButton = memo(Button);
+const MemoizedCircle = memo(Circle);
 
 export default App;
